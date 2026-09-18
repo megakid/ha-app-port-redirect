@@ -149,6 +149,13 @@ When the lines stop - give it a couple of weeks, phones and tablets come home
 only occasionally - the migration is done and the app can go. Set
 `log_requests: false` to keep only the app's own state changes in the log.
 
+Treat this log as sensitive: it records the request line verbatim, so webhook
+tokens (`/api/webhook/<id>`) and query strings appear in it in full. Redact before
+pasting it anywhere. A client whose WebSocket connection still arrives here
+(`uri="/api/websocket"`) is one whose configured URL has not been updated -
+WebSocket handshakes are not followed on a redirect, so that client needs its new
+URL set on the device.
+
 ## Troubleshooting
 
 **Log keeps saying the old port is in use** — something still listens there.
