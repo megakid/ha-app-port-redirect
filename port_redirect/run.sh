@@ -70,9 +70,10 @@ if [ "${TARGET_PORT}" != 80 ]; then
 fi
 
 # Only add the IPv6 listener when the kernel has IPv6 at all, otherwise nginx
-# refuses to start.
+# refuses to start. Test by reading the file: procfs reports its size as 0 even
+# when it has content, so `test -s` is useless here.
 ipv6_listen=''
-if [ -s /proc/net/if_inet6 ]; then
+if read -r _ < /proc/net/if_inet6; then
     ipv6_listen="        listen [::]:${LISTEN_PORT} default_server;"
 fi
 
