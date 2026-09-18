@@ -1,0 +1,24 @@
+# https://developers.home-assistant.io/docs/apps/configuration#app-configuration
+name: Port Redirect
+version: "1.0.0"
+slug: port_redirect
+description: >-
+  Keeps old URLs working after Home Assistant moves to a new HTTP port: nginx
+  answers on the previous port with permanent HTTP redirects to the new one.
+  Nothing is proxied and no kernel NAT is involved.
+url: "https://github.com/megakid/ha-app-port-redirect/tree/main/port_redirect"
+arch:
+  - aarch64
+  - amd64
+init: false
+host_network: true
+boot: auto
+startup: application
+options:
+  listen_port: 8123
+  target_port: 80
+  status: "308"
+schema:
+  listen_port: port
+  target_port: port
+  status: "list(301|308)"

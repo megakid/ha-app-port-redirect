@@ -1,0 +1,4 @@
+# https://developers.home-assistant.io/docs/apps/repository#repository-configuration
+name: Home Assistant Port Redirect
+url: 'https://github.com/megakid/ha-app-port-redirect'
+maintainer: James Connor <megakid@gmail.com>

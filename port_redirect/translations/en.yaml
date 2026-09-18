@@ -1,0 +1,15 @@
+configuration:
+  listen_port:
+    name: Previous port
+    description: >-
+      The port Home Assistant used to run on, which this app answers on. It must be
+      free, so move Home Assistant off it first.
+  target_port:
+    name: Home Assistant's new port
+    description: The port Home Assistant is listening on now. Redirects point here.
+  status:
+    name: Redirect status
+    description: >-
+      308 (default) keeps the HTTP method, so POSTs, webhooks and companion app
+      logins survive the redirect. 301 is the classic permanent redirect, but most
+      clients turn a redirected POST into a GET.
