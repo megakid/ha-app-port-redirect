@@ -38,6 +38,14 @@ curl -sL -o /dev/null -w '%{http_code}\n' http://<host>:8123/   # 200 from Home 
 port (companion app login, `/api/…`, a webhook) still works. Set `status: "301"`
 for the classic permanent redirect if you only care about `GET`s.
 
+Every hit is logged - client address, method, the name the client used, the path
+and the user agent - which is how you tell when the last client has moved off the
+old port:
+
+```sh
+ha apps logs -f port_redirect
+```
+
 More: [`port_redirect/DOCS.md`](port_redirect/DOCS.md) — options, the migration
 checklist, the Supervisor's port handling, troubleshooting, and rollback
 (`stop the app first — while it runs, it owns 8123`).
@@ -53,6 +61,11 @@ ssh root@<ha-host> 'mkdir -p /addons/port_redirect'
 scp -r port_redirect/. root@<ha-host>:/addons/port_redirect/
 ssh root@<ha-host> 'ha store reload && ha apps install local_port_redirect && ha apps start local_port_redirect'
 ssh root@<ha-host> 'ha apps logs -f local_port_redirect'
+
+# after changing config.yaml (version, options, schema) of an already installed
+# local app: the Supervisor keeps its own copy of that definition, so re-read the
+# folder and apply the update. `ha apps rebuild` only refreshes the image.
+ssh root@<ha-host> 'ha store reload && ha apps update local_port_redirect'
 ```
 
 To exercise the redirect without moving Home Assistant first, point it at a spare

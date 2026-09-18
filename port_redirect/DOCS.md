@@ -62,6 +62,7 @@ Two things that follow from that rule, both deliberate:
 | `listen_port` | `8123` | The port Home Assistant used to run on. |
 | `target_port` | `80` | The port Home Assistant runs on now. |
 | `status` | `"308"` | `308` (method-preserving) or `301`. |
+| `log_requests` | `true` | One line per hit in the app log - see [Watching the migration](#watching-the-migration). |
 
 The redirect keeps the requested host, path and query string:
 
@@ -109,6 +110,43 @@ curl -sL -o /dev/null -w '%{http_code}\n' http://<host>:8123/    # 200 from Home
 curl -s  "http://<host>:8123/lovelace/0?x=1" -o /dev/null -w '%{redirect_url}\n'  # path+query kept
 ```
 
+## Watching the migration
+
+Every hit is logged by default, one line per request, so you can see who is still
+arriving on the old port and retire the redirect only once nothing is:
+
+```
+2026-09-18T21:42:07+01:00 192.168.4.118 GET 308 host=192.168.4.55:8123 target="http://192.168.4.55/lovelace/0?edit=1" uri="/lovelace/0?edit=1" ua="Mozilla/5.0 (iPhone; CPU iPhone OS 19_0 like Mac OS X) HomeAssistant/2026.9"
+```
+
+| Field | What it tells you |
+| --- | --- |
+| `2026-09-18T21:42:07+01:00` | when it happened (sortable, timezone included) |
+| `192.168.4.118` | the client's address |
+| `GET` / `POST` | the method used - a `POST` only survives because the status is `308` |
+| `308` | the status that was sent |
+| `host=…` | the name or address the client used, e.g. an IP, `homeassistant.local:8123`, a Tailscale name |
+| `target=…` | where the client was sent |
+| `uri=…` | what it asked for |
+| `ua=…` | the client itself: browser, companion app, script, integration |
+
+Follow it live, or dump the history and triage:
+
+```sh
+ha apps logs -f port_redirect
+ha apps logs port_redirect -n 100000 > /tmp/redirect.log
+
+grep -o 'ua="[^"]*"'     /tmp/redirect.log | sort | uniq -c | sort -rn  # which clients
+grep -o 'host=[^ ]*'      /tmp/redirect.log | sort | uniq -c | sort -rn  # which names they use
+awk '/target=/{print $2}' /tmp/redirect.log | sort | uniq -c | sort -rn  # which addresses
+grep -o 'uri="[^"]*"'    /tmp/redirect.log | sort | uniq -c | sort -rn  # which pages/endpoints
+awk '/POST|PUT|PATCH|DELETE/{print}' /tmp/redirect.log                   # non-GET traffic
+```
+
+When the lines stop - give it a couple of weeks, phones and tablets come home
+only occasionally - the migration is done and the app can go. Set
+`log_requests: false` to keep only the app's own state changes in the log.
+
 ## Troubleshooting
 
 **Log keeps saying the old port is in use** — something still listens there.
@@ -133,4 +171,5 @@ asking for `https://host:8123` fails at the TLS handshake before any redirect.
 ## Removing
 
 Settings → Apps → Port Redirect → Uninstall. Stopping or removing the app frees
-the old port immediately; nothing else on the system is modified.
+the old port immediately; nothing else on the system is modified. Do it once the
+per-request log has been quiet for a while.

@@ -13,3 +13,10 @@ configuration:
       308 (default) keeps the HTTP method, so POSTs, webhooks and companion app
       logins survive the redirect. 301 is the classic permanent redirect, but most
       clients turn a redirected POST into a GET.
+  log_requests:
+    name: Log every request
+    description: >-
+      One line per hit in the app log, with client address, method, the name they
+      used, the path they asked for and their user agent. This is what tells you
+      when the last client has moved off the old port. Turn off to keep the log
+      to state changes only.

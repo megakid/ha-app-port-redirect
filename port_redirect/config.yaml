@@ -1,6 +1,6 @@
 # https://developers.home-assistant.io/docs/apps/configuration#app-configuration
 name: Port Redirect
-version: "1.0.0"
+version: "1.1.0"
 slug: port_redirect
 description: >-
   Keeps old URLs working after Home Assistant moves to a new HTTP port: nginx
@@ -18,7 +18,9 @@ options:
   listen_port: 8123
   target_port: 80
   status: "308"
+  log_requests: true
 schema:
   listen_port: port
   target_port: port
   status: "list(301|308)"
+  log_requests: bool

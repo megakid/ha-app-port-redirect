@@ -20,6 +20,14 @@ TARGET_PORT="$(bashio::config 'target_port')"
 STATUS="$(bashio::config 'status')"
 readonly LISTEN_PORT TARGET_PORT STATUS
 
+# Logging every hit is the point of a migration: it names the clients that still
+# use the old port, and what they asked for.
+LOG_REQUESTS=false
+if bashio::config.true 'log_requests'; then
+    LOG_REQUESTS=true
+fi
+readonly LOG_REQUESTS
+
 nginx_pid=''
 
 cleanup() {
@@ -77,6 +85,17 @@ if read -r _ < /proc/net/if_inet6; then
     ipv6_listen="        listen [::]:${LISTEN_PORT} default_server;"
 fi
 
+if [ "${LOG_REQUESTS}" = true ]; then
+    logging=$(
+        cat <<EOF
+    log_format migration '\$time_iso8601 \$remote_addr \$request_method \$status host=\$http_host target="http://\$host${target_port_suffix}\$request_uri" uri="\$request_uri" ua="\$http_user_agent"';
+    access_log /dev/stdout migration;
+EOF
+    )
+else
+    logging='    access_log off;'
+fi
+
 cat > "${NGINX_CONF}" <<EOF
 worker_processes 1;
 pid /tmp/port-redirect-nginx.pid;
@@ -85,7 +104,7 @@ error_log /dev/stderr warn;
 events { worker_connections 64; }
 
 http {
-    access_log off;
+${logging}
     client_body_temp_path /tmp/port-redirect-body;
     proxy_temp_path /tmp/port-redirect-proxy;
     fastcgi_temp_path /tmp/port-redirect-fastcgi;
@@ -131,6 +150,9 @@ while true; do
     else
         last_notice=''
         bashio::log.info "Serving permanent ${STATUS} redirects on TCP ${LISTEN_PORT} to Home Assistant on TCP ${TARGET_PORT}."
+        if [ "${LOG_REQUESTS}" = true ]; then
+            bashio::log.info "Every hit is logged below, one line per request."
+        fi
         nginx -c "${NGINX_CONF}" -g 'daemon off;' &
         nginx_pid=$!
         wait "${nginx_pid}" || bashio::log.warning "nginx exited, retrying in ${RESTART_INTERVAL}s."
