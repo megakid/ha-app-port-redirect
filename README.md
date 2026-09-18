@@ -43,7 +43,8 @@ and the user agent - which is how you tell when the last client has moved off th
 old port:
 
 ```sh
-ha apps logs -f port_redirect
+# repository-installed apps get a repository-id prefix on the slug
+ha apps logs -f 2f3d8d14_port_redirect
 ```
 
 More: [`port_redirect/DOCS.md`](port_redirect/DOCS.md) — options, the migration

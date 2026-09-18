@@ -130,11 +130,13 @@ arriving on the old port and retire the redirect only once nothing is:
 | `uri=…` | what it asked for |
 | `ua=…` | the client itself: browser, companion app, script, integration |
 
-Follow it live, or dump the history and triage:
+Follow it live, or dump the history and triage (`2f3d8d14_` is the repository-id
+prefix the Supervisor gives apps installed from this repo; check `ha apps` if you
+installed it as a local app instead):
 
 ```sh
-ha apps logs -f port_redirect
-ha apps logs port_redirect -n 100000 > /tmp/redirect.log
+ha apps logs -f 2f3d8d14_port_redirect
+ha apps logs 2f3d8d14_port_redirect -n 100000 > /tmp/redirect.log
 
 grep -o 'ua="[^"]*"'     /tmp/redirect.log | sort | uniq -c | sort -rn  # which clients
 grep -o 'host=[^ ]*'      /tmp/redirect.log | sort | uniq -c | sort -rn  # which names they use
